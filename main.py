@@ -14,12 +14,13 @@ def send_to_telegram(message):
         "text": message,
         "parse_mode": "Markdown"
     }
-    requests.post(url, data=payload)
+    response = requests.post(url, data=payload)
+    print("Telegram response:", response.status_code, response.text)
 
 @app.route("/", methods=["POST"])
 def webhook():
     data = request.json
-    print("Received Webhook:", data)  # Add this line to log payload
+    print("Received Webhook:", data)
     if data:
         msg = f"📈 *TradingView Alert*\n\nEvent: {data.get('event')}\nTicker: {data.get('ticker')}\nPrice: {data.get('price')}\nTime: {data.get('time')}"
         send_to_telegram(msg)
