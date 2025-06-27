@@ -13,8 +13,14 @@ def send_trade_alert_with_buttons(event, ticker, price, time):
     message = f"📈 *TradingView Alert*\n\n*Ticker:* `{ticker}`\n*Price:* {price}\n*Time:* {time}"
     keyboard = {
         "inline_keyboard": [[
-            {"text": "✅ Confirm Trade", "callback_data": f"confirm|{ticker}|{price}|{time}"},
-            {"text": "❌ Cancel", "callback_data": f"cancel|{ticker}|{price}|{time}"}
+            {
+                "text": "✅ Confirm Trade",
+                "callback_data": f"confirm|{ticker}|{price}|{time}"
+            },
+            {
+                "text": "❌ Cancel",
+                "callback_data": f"cancel|{ticker}|{price}|{time}"
+            }
         ]]
     }
     payload = {
@@ -25,6 +31,7 @@ def send_trade_alert_with_buttons(event, ticker, price, time):
     }
     response = requests.post(url, json=payload)
     print("Telegram response:", response.status_code, response.text)
+
 
 @app.route("/", methods=["POST"])
 def webhook():
