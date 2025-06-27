@@ -19,11 +19,15 @@ def send_to_telegram(message):
 
 @app.route("/", methods=["POST"])
 def webhook():
-    data = request.json
-    print("Received Webhook:", data)  # logs inbound data
+    try:
+        data = request.get_json(force=True)  # Force parse even without correct Content-Type
+        print("Received Webhook:", data)
 
-    if data:
-        msg = f"📈 *TradingView Alert*\n\nEvent: {data.get('event')}\nTicker: {data.get('ticker')}\nPrice: {data.get('price')}\nTime: {data.get('time')}"
-        send_to_telegram(msg)
-        return "OK", 200
-    return "No data", 400
+        if data:
+            msg = f"📈 *TradingView Alert*\n\nEvent: {data.get('event')}\nTicker: {data.get('ticker')}\nPrice: {data.get('price')}\nTime: {data.get('time')}"
+            send_to_telegram(msg)
+            return "OK", 200
+        return "No data", 400
+    except Exception as e:
+        print("Webhook error:", str(e))
+        return "Bad Request", 400
