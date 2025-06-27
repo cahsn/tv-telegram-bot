@@ -1,11 +1,11 @@
 from flask import Flask, request
 import requests
-import os
 
 app = Flask(__name__)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
+# Your Telegram bot token and chat ID
+BOT_TOKEN = "8195018136:AAHxRl4glwZG6X_uEh9Z356-982GeOuJjm4"
+CHAT_ID = "1662274091"
 
 def send_trade_alert_with_buttons(event, ticker, price, time):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
