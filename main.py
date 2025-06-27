@@ -20,7 +20,7 @@ def send_to_telegram(message):
 @app.route("/", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(force=True)  # Force parse even without correct Content-Type
         print("Received Webhook:", data)
 
         if data:
@@ -30,4 +30,5 @@ def webhook():
         return "No data", 400
 
     except Exception as e:
-        pri
+        print("Webhook error:", str(e))
+        return "Bad Request", 400
