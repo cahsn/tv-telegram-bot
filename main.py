@@ -20,9 +20,22 @@ def send_to_telegram(message):
 @app.route("/", methods=["POST"])
 def webhook():
     data = request.json
-    print("Received Webhook:", data)
+    print("Received Webhook:", data)  # ✅ Confirm TradingView sent something
+
     if data:
         msg = f"📈 *TradingView Alert*\n\nEvent: {data.get('event')}\nTicker: {data.get('ticker')}\nPrice: {data.get('price')}\nTime: {data.get('time')}"
         send_to_telegram(msg)
         return "OK", 200
     return "No data", 400
+
+
+def send_to_telegram(message):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    response = requests.post(url, data=payload)
+    print("Telegram response:", response.status_code, response.text)  # ✅ Confirm success/failure
+
