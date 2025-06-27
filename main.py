@@ -13,8 +13,8 @@ def send_trade_alert_with_buttons(event, ticker, price, time):
     message = f"📈 *TradingView Alert*\n\n*Ticker:* `{ticker}`\n*Price:* {price}\n*Time:* {time}"
     keyboard = {
         "inline_keyboard": [[
-            {"text": "✅ Confirm Trade", "callback_data": "confirm"},
-            {"text": "❌ Cancel", "callback_data": "cancel"}
+            {"text": "✅ Confirm Trade", "callback_data": f"confirm|{ticker}|{price}|{time}"},
+            {"text": "❌ Cancel", "callback_data": f"cancel|{ticker}|{price}|{time}"}
         ]]
     }
     payload = {
@@ -51,7 +51,13 @@ def callback():
     try:
         data = request.get_json()
         callback_query = data.get("callback_query", {})
-        user_choice = callback_query.get("data")
+        callback_data = callback_query.get("data", "")
+        parts = callback_data.split("|")
+        user_choice = parts[0]
+        ticker = parts[1] if len(parts) > 1 else "N/A"
+        price = parts[2] if len(parts) > 2 else "N/A"
+        time = parts[3] if len(parts) > 3 else "N/A"
+
         user_id = callback_query.get("from", {}).get("id")
         message_id = callback_query.get("message", {}).get("message_id")
 
@@ -61,15 +67,16 @@ def callback():
 
         # Respond based on the button pressed
         if user_choice == "confirm":
-            text = "✅ Trade Confirmed!"
+            text = f"✅ Trade Confirmed!\n\nTicker: `{ticker}`\nPrice: {price}\nTime: {time}"
         else:
-            text = "❌ Trade Canceled."
+            text = f"❌ Trade Canceled.\n\nTicker: `{ticker}`\nPrice: {price}\nTime: {time}"
 
         edit_url = f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText"
         payload = {
             "chat_id": user_id,
             "message_id": message_id,
-            "text": text
+            "text": text,
+            "parse_mode": "Markdown"
         }
         requests.post(edit_url, json=payload)
         return "OK", 200
