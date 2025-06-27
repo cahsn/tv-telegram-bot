@@ -28,6 +28,7 @@ def webhook():
             send_to_telegram(msg)
             return "OK", 200
         return "No data", 400
+
     except Exception as e:
         print("Webhook error:", str(e))
         return "Bad Request", 400
