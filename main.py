@@ -7,25 +7,37 @@ app = Flask(__name__)
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
-def send_to_telegram(message):
+def send_trade_alert_with_buttons(event, ticker, price, time):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    message = f"📈 *TradingView Alert*\n\n*Ticker:* `{ticker}`\n*Price:* {price}\n*Time:* {time}"
+    keyboard = {
+        "inline_keyboard": [[
+            {"text": "✅ Confirm Trade", "callback_data": "confirm"},
+            {"text": "❌ Cancel", "callback_data": "cancel"}
+        ]]
+    }
     payload = {
         "chat_id": CHAT_ID,
         "text": message,
-        "parse_mode": "Markdown"
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
     }
-    response = requests.post(url, data=payload)
+    response = requests.post(url, json=payload)
     print("Telegram response:", response.status_code, response.text)
 
 @app.route("/", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json(force=True)  # Force parse even without correct Content-Type
+        data = request.get_json(force=True)
         print("Received Webhook:", data)
 
         if data:
-            msg = f"📈 *TradingView Alert*\n\nEvent: {data.get('event')}\nTicker: {data.get('ticker')}\nPrice: {data.get('price')}\nTime: {data.get('time')}"
-            send_to_telegram(msg)
+            send_trade_alert_with_buttons(
+                data.get("event"),
+                data.get("ticker"),
+                data.get("price"),
+                data.get("time")
+            )
             return "OK", 200
         return "No data", 400
 
@@ -33,7 +45,34 @@ def webhook():
         print("Webhook error:", str(e))
         return "Bad Request", 400
 
-# === Render-compatible server start ===
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render sets the PORT env var automatically
-    app.run(host="0.0.0.0", port=port)
+@app.route("/callback", methods=["POST"])
+def callback():
+    try:
+        data = request.get_json()
+        callback_query = data.get("callback_query", {})
+        user_choice = callback_query.get("data")
+        user_id = callback_query.get("from", {}).get("id")
+        message_id = callback_query.get("message", {}).get("message_id")
+
+        # Acknowledge the button press
+        ack_url = f"https://api.telegram.org/bot{BOT_TOKEN}/answerCallbackQuery"
+        requests.post(ack_url, json={"callback_query_id": callback_query["id"]})
+
+        # Respond based on the button pressed
+        if user_choice == "confirm":
+            text = "✅ Trade Confirmed!"
+        else:
+            text = "❌ Trade Canceled."
+
+        edit_url = f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText"
+        payload = {
+            "chat_id": user_id,
+            "message_id": message_id,
+            "text": text
+        }
+        requests.post(edit_url, json=payload)
+        return "OK", 200
+
+    except Exception as e:
+        print("Callback error:", str(e))
+        return "Bad Request", 400
