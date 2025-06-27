@@ -32,3 +32,8 @@ def webhook():
     except Exception as e:
         print("Webhook error:", str(e))
         return "Bad Request", 400
+
+# === Render-compatible server start ===
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))  # Render sets the PORT env var automatically
+    app.run(host="0.0.0.0", port=port)
