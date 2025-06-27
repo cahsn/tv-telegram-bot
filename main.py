@@ -1,5 +1,6 @@
 from flask import Flask, request
 import requests
+import os
 
 app = Flask(__name__)
 
@@ -73,4 +74,11 @@ def callback():
         requests.post(edit_url, json=payload)
         return "OK", 200
 
-    except Exception
+    except Exception as e:
+        print("Callback error:", str(e))
+        return "Bad Request", 400
+
+# ✅ Required for Render or any cloud host to detect the port
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
